@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h4 class="mb-3">Supervisor dashboard</h4>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-2"><div class="card text-center"><div class="card-body"><div class="fs-3">{{ total }}</div>Total</div></div></div>
+  <div class="col-6 col-md-2"><div class="card text-center border-danger"><div class="card-body"><div class="fs-3">{{ unassigned }}</div>Unassigned</div></div></div>
+  <div class="col-6 col-md-2"><div class="card text-center"><div class="card-body"><div class="fs-3">{{ counts.open }}</div>Open</div></div></div>
+  <div class="col-6 col-md-2"><div class="card text-center"><div class="card-body"><div class="fs-3">{{ counts.in_progress }}</div>In progress</div></div></div>
+  <div class="col-6 col-md-2"><div class="card text-center"><div class="card-body"><div class="fs-3">{{ counts.resolved }}</div>Resolved</div></div></div>
+  <div class="col-6 col-md-2"><div class="card text-center"><div class="card-body"><div class="fs-3">{{ counts.closed }}</div>Closed</div></div></div>
+</div>
+
+<h5>IT staff workload</h5>
+<table class="table bg-white mb-4">
+  <thead><tr><th>Staff</th><th>Active tickets</th><th>All-time tickets</th></tr></thead>
+  <tbody>
+  {% for s in staff %}
+    <tr><td>{{ s.username }}</td><td>{{ s.active_count }}</td><td>{{ s.total_count }}</td></tr>
+  {% empty %}
+    <tr><td colspan="3" class="text-muted">No IT staff yet. Add them in the admin site.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<div class="d-flex justify-content-between"><h5>Recent tickets</h5><a href="{% url 'ticket_list' %}">View all</a></div>
+<table class="table bg-white">
+  <tbody>
+  {% for t in recent %}
+    <tr>
+      <td>#{{ t.pk }}</td>
+      <td><a href="{% url 'ticket_detail' t.pk %}">{{ t.title }}</a></td>
+      <td>{{ t.get_status_display }}</td>
+      <td>{{ t.assigned_to.username|default:"Unassigned" }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

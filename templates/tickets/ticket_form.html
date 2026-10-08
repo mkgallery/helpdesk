@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card mx-auto" style="max-width:720px"><div class="card-body">
+  <h4 class="mb-3">Report an IT problem</h4>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    {{ form.non_field_errors }}
+    {{ form.latitude }}{{ form.longitude }}
+
+    <h6 class="text-muted">1. Where are you?</h6>
+    <div class="row g-2 mb-2">
+      <div class="col-md-4">{{ form.region.label_tag }}{{ form.region }}{{ form.region.errors }}</div>
+      <div class="col-md-4">{{ form.district.label_tag }}{{ form.district }}{{ form.district.errors }}</div>
+      <div class="col-md-4">{{ form.office.label_tag }}{{ form.office }}{{ form.office.errors }}</div>
+    </div>
+    <button type="button" id="loc-btn" class="btn btn-outline-secondary btn-sm mb-1">📍 Capture my exact location</button>
+    <div id="loc-status" class="small text-muted mb-3">Location not captured yet (optional).</div>
+
+    <h6 class="text-muted">2. What is the problem?</h6>
+    <div class="mb-2">{{ form.title.label_tag }}{{ form.title }}{{ form.title.errors }}</div>
+    <div class="mb-2">{{ form.description.label_tag }}{{ form.description }}{{ form.description.errors }}</div>
+    <div class="mb-2">{{ form.priority.label_tag }}{{ form.priority }}</div>
+    <div class="mb-3">
+      <label class="form-label">Attach files (screenshots, documents)</label>
+      <input type="file" name="attachments" multiple class="form-control">
+    </div>
+    <button class="btn btn-primary">Submit ticket</button>
+  </form>
+</div></div>
+
+<script>
+document.getElementById("loc-btn").addEventListener("click", function () {
+  const status = document.getElementById("loc-status");
+  if (!navigator.geolocation) { status.textContent = "Geolocation is not supported by this browser."; return; }
+  status.textContent = "Getting location...";
+  navigator.geolocation.getCurrentPosition(function (pos) {
+    document.getElementById("id_latitude").value = pos.coords.latitude.toFixed(6);
+    document.getElementById("id_longitude").value = pos.coords.longitude.toFixed(6);
+    status.textContent = "Captured: " + pos.coords.latitude.toFixed(6) + ", " +
+      pos.coords.longitude.toFixed(6) + " (accuracy ±" + Math.round(pos.coords.accuracy) + " m)";
+  }, function (err) {
+    status.textContent = "Could not get location: " + err.message;
+  }, { enableHighAccuracy: true, timeout: 15000 });
+});
+</script>
+{% endblock %}

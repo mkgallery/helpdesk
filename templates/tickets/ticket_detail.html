@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card mb-3"><div class="card-body">
+      <h4>#{{ ticket.pk }} — {{ ticket.title }}</h4>
+      <p class="text-muted mb-2">
+        Raised by {{ ticket.created_by.get_full_name|default:ticket.created_by.username }}
+        on {{ ticket.created_at|date:"d M Y H:i" }}
+      </p>
+      <p style="white-space:pre-wrap">{{ ticket.description }}</p>
+      <hr>
+      <p class="mb-1"><strong>Location:</strong> {{ ticket.region }} / {{ ticket.district }} / {{ ticket.office }}</p>
+      {% if ticket.latitude and ticket.longitude %}
+        <p class="mb-1"><strong>GPS:</strong> {{ ticket.latitude }}, {{ ticket.longitude }} —
+          <a target="_blank" rel="noopener" href="https://www.google.com/maps?q={{ ticket.latitude }},{{ ticket.longitude }}">Open in Google Maps</a></p>
+      {% endif %}
+      <h6 class="mt-3">Attachments</h6>
+      <ul>
+        {% for a in ticket.attachments.all %}
+          <li><a href="{{ a.file.url }}" target="_blank">{{ a.filename }}</a></li>
+        {% empty %}<li class="text-muted">None</li>{% endfor %}
+      </ul>
+    </div></div>
+
+    <div class="card"><div class="card-body">
+      <h6>Conversation</h6>
+      {% for c in ticket.comments.all %}
+        <div class="border-bottom py-2">
+          <strong>{{ c.author.username }}</strong> <span class="badge text-bg-light">{{ c.author.get_role_display }}</span>
+          <small class="text-muted">{{ c.created_at|date:"d M H:i" }}</small>
+          <div style="white-space:pre-wrap">{{ c.message }}</div>
+        </div>
+      {% empty %}<p class="text-muted">No comments yet.</p>{% endfor %}
+      <form method="post" class="mt-3">{% csrf_token %}
+        <input type="hidden" name="action" value="comment">
+        {{ comment_form.message }}
+        <button class="btn btn-primary btn-sm mt-2">Add comment</button>
+      </form>
+    </div></div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card mb-3"><div class="card-body">
+      <p class="mb-1"><strong>Status:</strong> <span class="badge text-bg-secondary">{{ ticket.get_status_display }}</span></p>
+      <p class="mb-1"><strong>Priority:</strong> {{ ticket.get_priority_display }}</p>
+      <p class="mb-0"><strong>Assigned to:</strong> {{ ticket.assigned_to.username|default:"Unassigned" }}</p>
+    </div></div>
+
+    {% if can_work and user.role != 'employee' %}
+    <div class="card mb-3"><div class="card-body">
+      {% if ticket.assigned_to_id != user.id %}
+        <form method="post" class="mb-3">{% csrf_token %}
+          <input type="hidden" name="action" value="take">
+          <button class="btn btn-success w-100">Take this ticket</button>
+        </form>
+      {% endif %}
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="action" value="status">
+        <label class="form-label">Update status</label>
+        <select name="status" class="form-select mb-2">
+          {% for value, label in statuses %}
+            <option value="{{ value }}" {% if ticket.status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-outline-primary w-100">Save status</button>
+      </form>
+    </div></div>
+    {% endif %}
+
+    {% if staff_members is not None %}
+    <div class="card"><div class="card-body">
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="action" value="assign">
+        <label class="form-label">Assign to IT staff</label>
+        <select name="assigned_to" class="form-select mb-2">
+          {% for s in staff_members %}
+            <option value="{{ s.pk }}" {% if ticket.assigned_to_id == s.pk %}selected{% endif %}>{{ s.username }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-outline-dark w-100">Assign</button>
+      </form>
+    </div></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
