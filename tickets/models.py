@@ -42,8 +42,17 @@ class Ticket(models.Model):
         MEDIUM = "medium", "Medium"
         HIGH = "high", "High"
 
+    # Who reported the problem (no account needed)
+    requester_name = models.CharField(max_length=150, default="")
+    requester_phone = models.CharField(max_length=20, default="")
+
+    # Kept optional, e.g. for tickets created by staff in the admin site
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tickets"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tickets",
     )
     assigned_to = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -55,6 +64,7 @@ class Ticket(models.Model):
     region = models.CharField(max_length=100)
     district = models.CharField(max_length=100)
     office = models.CharField(max_length=150)
+    department = models.CharField(max_length=150, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     title = models.CharField(max_length=200)

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card mx-auto text-center" style="max-width:560px"><div class="card-body py-5">
+  <h3 class="text-success">Ticket submitted ✔</h3>
+  <p class="fs-5">Your ticket number is <strong>#{{ ticket.pk }}</strong></p>
+  <p class="text-muted">
+    IT support has received your request and will contact
+    {{ ticket.requester_name }} on {{ ticket.requester_phone }}.
+  </p>
+  <a class="btn btn-primary" href="{% url 'ticket_create' %}">Submit another ticket</a>
+</div></div>
+{% endblock %}

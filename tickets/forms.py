@@ -1,22 +1,25 @@
+import re
+
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
 
-from .models import Ticket, TicketComment, User
-
-
-class RegisterForm(UserCreationForm):
-    class Meta:
-        model = User
-        fields = ("username", "first_name", "last_name", "email")
+from .models import Ticket, TicketComment
 
 
 class TicketForm(forms.ModelForm):
     class Meta:
         model = Ticket
         fields = [
-            "region", "district", "office", "latitude", "longitude",
+            "requester_name", "requester_phone",
+            "region", "district", "office", "department",
+            "latitude", "longitude",
             "title", "description", "priority",
         ]
+        labels = {
+            "requester_name": "Your full name",
+            "requester_phone": "Phone number",
+            "office": "Office / site",
+            "department": "Department (optional)",
+        }
         widgets = {
             "latitude": forms.HiddenInput(),
             "longitude": forms.HiddenInput(),
@@ -29,6 +32,15 @@ class TicketForm(forms.ModelForm):
             if name not in ("latitude", "longitude"):
                 css = "form-select" if name == "priority" else "form-control"
                 field.widget.attrs["class"] = css
+        self.fields["requester_phone"].widget.attrs["inputmode"] = "tel"
+
+    def clean_requester_phone(self):
+        phone = re.sub(r"[\s\-().]", "", self.cleaned_data["requester_phone"])
+        if not re.fullmatch(r"\+?\d{9,15}", phone):
+            raise forms.ValidationError(
+                "Enter a valid phone number: digits only, optionally starting with +."
+            )
+        return phone
 
 
 class CommentForm(forms.ModelForm):
