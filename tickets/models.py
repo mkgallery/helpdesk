@@ -61,10 +61,7 @@ class Ticket(models.Model):
         blank=True,
         related_name="assigned_tickets",
     )
-    region = models.CharField(max_length=100)
-    district = models.CharField(max_length=100)
     office = models.CharField(max_length=150)
-    department = models.CharField(max_length=150, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     title = models.CharField(max_length=200)

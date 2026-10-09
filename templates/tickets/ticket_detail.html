@@ -9,7 +9,7 @@
       <p class="mb-1"><strong>Phone:</strong> <a href="tel:{{ ticket.requester_phone }}">{{ ticket.requester_phone }}</a></p>
       <p style="white-space:pre-wrap">{{ ticket.description }}</p>
       <hr>
-           <p class="mb-1"><strong>Location:</strong> {{ ticket.region }} / {{ ticket.district }} / {{ ticket.office }}{% if ticket.department %} / {{ ticket.department }}{% endif %}</p>
+      <p class="mb-1"><strong>Office / site:</strong> {{ ticket.office }}</p>
       {% if ticket.latitude and ticket.longitude %}
         <p class="mb-1"><strong>GPS:</strong> {{ ticket.latitude }}, {{ ticket.longitude }} —
           <a target="_blank" rel="noopener" href="https://www.google.com/maps?q={{ ticket.latitude }},{{ ticket.longitude }}">Open in Google Maps</a></p>

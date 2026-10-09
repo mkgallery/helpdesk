@@ -9,16 +9,14 @@ class TicketForm(forms.ModelForm):
     class Meta:
         model = Ticket
         fields = [
-            "requester_name", "requester_phone",
-            "region", "district", "office", "department",
+            "requester_name", "requester_phone", "office",
             "latitude", "longitude",
-            "title", "description", "priority",
+            "title", "description",
         ]
         labels = {
             "requester_name": "Your full name",
             "requester_phone": "Phone number",
             "office": "Office / site",
-            "department": "Department (optional)",
         }
         widgets = {
             "latitude": forms.HiddenInput(),
@@ -30,8 +28,7 @@ class TicketForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
             if name not in ("latitude", "longitude"):
-                css = "form-select" if name == "priority" else "form-control"
-                field.widget.attrs["class"] = css
+                field.widget.attrs["class"] = "form-control"
         self.fields["requester_phone"].widget.attrs["inputmode"] = "tel"
 
     def clean_requester_phone(self):

@@ -26,7 +26,7 @@
     <tr>
       <td>{{ t.pk }}</td>
       <td><a href="{% url 'ticket_detail' t.pk %}">{{ t.title }}</a></td>
-      <td>{{ t.region }} / {{ t.district }} / {{ t.office }}</td>
+      <td>{{ t.office }}</td>
       <td>{{ t.requester_name }}<br><small class="text-muted">{{ t.requester_phone }}</small></td>
       <td>{{ t.get_priority_display }}</td>
       <td><span class="badge text-bg-secondary">{{ t.get_status_display }}</span></td>
