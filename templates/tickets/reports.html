@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<h4 class="mb-3">Reports — Tickets</h4>
+
+{# ---------------- Filter bar (date range only) ---------------- #}
+<form method="get" class="card mb-3">
+  <div class="card-body">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">Date range</label>
+        <select name="range" class="form-select">
+          <option value="all"        {% if params.range == 'all'        %}selected{% endif %}>All time</option>
+          <option value="today"      {% if params.range == 'today'      %}selected{% endif %}>Today</option>
+          <option value="this_week"  {% if params.range == 'this_week'  %}selected{% endif %}>This week</option>
+          <option value="this_month" {% if params.range == 'this_month' %}selected{% endif %}>This month</option>
+          <option value="this_year"  {% if params.range == 'this_year'  %}selected{% endif %}>This year</option>
+          <option value="custom"     {% if params.range == 'custom'     %}selected{% endif %}>Custom range</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">From</label>
+        <input type="date" name="from" value="{{ params.from|default:'' }}" class="form-control">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">To</label>
+        <input type="date" name="to" value="{{ params.to|default:'' }}" class="form-control">
+      </div>
+      <div class="col-md-3 d-flex gap-2">
+        <button class="btn btn-primary w-100">Apply</button>
+        <a href="{% url 'reports' %}" class="btn btn-outline-secondary">Reset</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+{# ---------------- Summary + export ---------------- #}
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <div><strong>{{ ticket_count }}</strong> ticket{{ ticket_count|pluralize }} in this range.</div>
+  <a href="{% url 'reports_csv' %}?{{ params.urlencode }}" class="btn btn-success">
+    Download CSV
+  </a>
+</div>
+
+{# ---------------- Results table ---------------- #}
+<div class="table-responsive">
+  <table class="table table-sm table-striped align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Title</th>
+        <th>Status</th>
+        <th>Priority</th>
+        <th>Office</th>
+        <th>Requester</th>
+        <th>Phone</th>
+        <th>Assigned to</th>
+        <th>Created</th>
+        <th>Updated</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tickets %}
+        <tr>
+          <td>#{{ t.number|default:t.closed_number|default:t.pk }}</td>
+          <td><a href="{% url 'ticket_detail' t.pk %}">{{ t.title }}</a></td>
+          <td>{{ t.get_status_display }}</td>
+          <td>{{ t.get_priority_display }}</td>
+          <td>{{ t.office }}</td>
+          <td>{{ t.requester_name }}</td>
+          <td>{{ t.requester_phone }}</td>
+          <td>{{ t.assigned_to.username|default:"—" }}</td>
+          <td>{{ t.created_at|date:"d M Y H:i" }}</td>
+          <td>{{ t.updated_at|date:"d M Y H:i" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="10" class="text-center text-muted py-4">No tickets in this range.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

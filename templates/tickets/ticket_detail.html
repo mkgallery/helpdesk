@@ -3,7 +3,7 @@
 <div class="row g-4">
   <div class="col-lg-8">
     <div class="card mb-3"><div class="card-body">
-      <h4>#{{ ticket.pk }} — {{ ticket.title }}</h4>
+      <h4>{{ ticket.display_number }} — {{ ticket.title }}</h4>
       <p class="text-muted mb-2">Submitted on {{ ticket.created_at|date:"d M Y H:i" }}</p>
       <p class="mb-1"><strong>Requester:</strong> {{ ticket.requester_name }}</p>
       <p class="mb-1"><strong>Phone:</strong> <a href="tel:{{ ticket.requester_phone }}">{{ ticket.requester_phone }}</a></p>
@@ -66,6 +66,25 @@
       </form>
     </div></div>
     {% endif %}
+
+    {# ------------- NEW: internal handoff (assigned staff only) ------------- #}
+    {% if ticket.assigned_to_id == user.id and other_staff %}
+    <div class="card mb-3"><div class="card-body">
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="action" value="handoff">
+        <label class="form-label">Hand off to another staff</label>
+        <select name="new_staff" class="form-select mb-2" required>
+          <option value="">— choose staff —</option>
+          {% for s in other_staff %}
+            <option value="{{ s.pk }}">{{ s.username }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-outline-warning w-100">Hand off</button>
+        <small class="text-muted d-block mt-2">The employee will not be notified.</small>
+      </form>
+    </div></div>
+    {% endif %}
+    {# ---------------------------------------------------------------------- #}
 
     {% if staff_members is not None %}
     <div class="card"><div class="card-body">

@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 import os
 from pathlib import Path
 
@@ -87,3 +89,33 @@ LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
 
 MESSAGE_TAGS = {messages_constants.ERROR: "danger"}
+# ==========================================
+# SMS (Meseji) settings
+# ==========================================
+import os
+
+MESEJI_BASE_URL   = os.environ.get("MESEJI_BASE_URL", "https://meseji.co.tz/api/v1")
+MESEJI_TOKEN      = os.environ.get("MESEJI_TOKEN", "zs_e07e2a65e2301a88631c04b872f30c66296678bdde416f7c")
+MESEJI_SENDER_ID  = os.environ.get("MESEJI_SENDER_ID", "MESEJI")
+
+# Toggle SMS on/off (useful for dev)
+SMS_ENABLED = os.environ.get("SMS_ENABLED", "true").lower() == "true"
+# ==========================================
+# Logging (so SMS attempts show in console)
+# ==========================================
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "tickets": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}

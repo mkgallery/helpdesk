@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.db import IntegrityError, models, transaction
+from django.utils import timezone
 
 
 class User(AbstractUser):
@@ -42,11 +43,16 @@ class Ticket(models.Model):
         MEDIUM = "medium", "Medium"
         HIGH = "high", "High"
 
+    # Public ticket number. Only active tickets have one. It is released when
+    # the ticket is closed and given to the next new ticket.
+    number = models.PositiveIntegerField(unique=True, null=True, blank=True, editable=False)
+    closed_number = models.PositiveIntegerField(null=True, blank=True, editable=False)
+    closed_at = models.DateTimeField(null=True, blank=True, editable=False)
+
     # Who reported the problem (no account needed)
     requester_name = models.CharField(max_length=150, default="")
     requester_phone = models.CharField(max_length=20, default="")
 
-    # Kept optional, e.g. for tickets created by staff in the admin site
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -75,7 +81,47 @@ class Ticket(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"#{self.pk} {self.title}"
+        return f"{self.display_number} {self.title}"
+
+    @property
+    def display_number(self):
+        if self.number is not None:
+            return f"#{self.number}"
+        return f"closed (was #{self.closed_number or self.pk})"
+
+    @classmethod
+    def _next_free_number(cls):
+        used = set(
+            cls.objects.exclude(number__isnull=True).values_list("number", flat=True)
+        )
+        n = 1
+        while n in used:
+            n += 1
+        return n
+
+    def save(self, *args, **kwargs):
+        # Closing a ticket releases its number so a new ticket can use it.
+        if self.status == self.Status.CLOSED:
+            if self.number is not None:
+                self.closed_number = self.number
+                self.number = None
+                self.closed_at = timezone.now()
+            return super().save(*args, **kwargs)
+
+        # Active ticket that already has a number: nothing special to do.
+        if self.number is not None:
+            return super().save(*args, **kwargs)
+
+        # New (or re-opened) ticket: give it the lowest free number.
+        self.closed_at = None
+        for _ in range(5):
+            self.number = self._next_free_number()
+            try:
+                with transaction.atomic():
+                    return super().save(*args, **kwargs)
+            except IntegrityError:
+                self.number = None  # someone took it at the same moment, try again
+        raise IntegrityError("Could not assign a ticket number, please try again.")
 
 
 class TicketAttachment(models.Model):

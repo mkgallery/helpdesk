@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card mx-auto mb-3" style="max-width:560px"><div class="card-body">
+  <h4 class="mb-3">View your ticket</h4>
+  <form method="post">{% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="mb-2">{{ form.number.label_tag }}{{ form.number }}{{ form.number.errors }}</div>
+    <div class="mb-3">{{ form.phone.label_tag }}{{ form.phone }}{{ form.phone.errors }}</div>
+    <button class="btn btn-primary w-100">Check status</button>
+  </form>
+</div></div>
+
+{% if searched and not ticket %}
+<div class="alert alert-warning mx-auto" style="max-width:560px">
+  No open ticket matches that number and phone number. Please check both. If your
+  ticket was already closed, its number has been released and it can no longer be viewed here.
+</div>
+{% endif %}
+
+{% if ticket %}
+<div class="card mx-auto" style="max-width:560px"><div class="card-body">
+  <h5>Ticket #{{ ticket.number }} — {{ ticket.title }}</h5>
+  <p class="text-muted">
+    Submitted {{ ticket.created_at|date:"d M Y H:i" }} ·
+    Last update {{ ticket.updated_at|date:"d M Y H:i" }}
+  </p>
+
+  <div class="d-flex justify-content-between text-center my-3">
+    {% for s in stages %}
+      <div class="flex-fill">
+        <span class="badge rounded-pill {% if s.state == 'done' %}text-bg-success{% elif s.state == 'current' %}text-bg-primary{% else %}text-bg-light border{% endif %}">{{ forloop.counter }}</span>
+        <div class="small {% if s.state == 'current' %}fw-bold{% endif %}">{{ s.label }}</div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <p class="mb-1"><strong>Current status:</strong> {{ ticket.get_status_display }}</p>
+  <p class="mb-1"><strong>Handled by:</strong>
+    {% if ticket.assigned_to %}{{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}{% else %}Waiting for an IT staff member{% endif %}
+  </p>
+  <p class="small text-muted mb-0 mt-2">When your ticket is closed it leaves the system and its number is released.</p>
+</div></div>
+{% endif %}
+{% endblock %}

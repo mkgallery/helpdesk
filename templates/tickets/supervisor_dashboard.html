@@ -27,7 +27,7 @@
   <tbody>
   {% for t in recent %}
     <tr>
-      <td>#{{ t.pk }}</td>
+      <td>{{ t.display_number }}</td>
       <td><a href="{% url 'ticket_detail' t.pk %}">{{ t.title }}</a></td>
       <td>{{ t.get_status_display }}</td>
       <td>{{ t.assigned_to.username|default:"Unassigned" }}</td>

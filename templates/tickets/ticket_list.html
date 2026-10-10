@@ -7,7 +7,7 @@
 
 {% if show_filters %}
 <div class="mb-3 d-flex flex-wrap gap-2">
-  <a class="btn btn-sm btn-outline-dark" href="{% url 'ticket_list' %}">All</a>
+  <a class="btn btn-sm btn-outline-dark" href="{% url 'ticket_list' %}">Active</a>
   <a class="btn btn-sm btn-outline-dark" href="?filter=unassigned">Unassigned</a>
   <a class="btn btn-sm btn-outline-dark" href="?filter=mine">Assigned to me</a>
   {% for value, label in statuses %}
@@ -24,7 +24,7 @@
   <tbody>
   {% for t in tickets %}
     <tr>
-      <td>{{ t.pk }}</td>
+      <td>{{ t.display_number }}</td>
       <td><a href="{% url 'ticket_detail' t.pk %}">{{ t.title }}</a></td>
       <td>{{ t.office }}</td>
       <td>{{ t.requester_name }}<br><small class="text-muted">{{ t.requester_phone }}</small></td>
