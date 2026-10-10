@@ -70,12 +70,18 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
+    # Strip any query string from the URL — mysqlclient doesn't accept
+    # ssl-mode/sslmode/ssl_mode as kwargs. We force SSL via OPTIONS below.
+    clean_url = DATABASE_URL.split("?")[0]
     DATABASES = {
         "default": dj_database_url.parse(
-            DATABASE_URL,
+            clean_url,
             conn_max_age=600,
-            ssl_require=True,
         )
+    }
+    DATABASES["default"]["OPTIONS"] = {
+        "charset": "utf8mb4",
+        "ssl": {"ssl_mode": "REQUIRED"},
     }
 else:
     DATABASES = {
