@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: helpdesk
+    runtime: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: WEB_CONCURRENCY
+        value: "2"
+      - key: DATABASE_URL
+        sync: false
+      - key: MESEJI_TOKEN
+        sync: false
+      - key: MESEJI_SENDER_ID
+        value: "MESEJI"
+      - key: MESEJI_BASE_URL
+        value: "https://meseji.co.tz/api/v1"
+      - key: SMS_ENABLED
+        value: "true"
