@@ -1,43 +1,148 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card mx-auto" style="max-width:720px"><div class="card-body">
-  <h4 class="mb-3">Report an IT problem</h4>
-  <form method="post" enctype="multipart/form-data">{% csrf_token %}
-    {{ form.non_field_errors }}
-    {{ form.latitude }}{{ form.longitude }}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-10 col-lg-8 col-xl-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4 p-sm-5">
 
-    <h6 class="text-muted">1. Your details</h6>
-    <div class="row g-2 mb-3">
-      <div class="col-md-6">{{ form.requester_name.label_tag }}{{ form.requester_name }}{{ form.requester_name.errors }}</div>
-      <div class="col-md-6">{{ form.requester_phone.label_tag }}{{ form.requester_phone }}{{ form.requester_phone.errors }}</div>
+        <div class="text-center mb-4">
+          <h4 class="mb-1">Report an IT problem</h4>
+          <p class="text-muted small mb-0">Fill in the details below. All fields marked with * are required.</p>
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          {{ form.latitude }}
+          {{ form.longitude }}
+
+          {# ---- Section 1: Your details ---- #}
+          <h6 class="text-uppercase text-muted small fw-semibold mb-3 mt-4">
+            1 · Your details
+          </h6>
+
+          <div class="mb-3">
+            <label for="{{ form.requester_name.id_for_label }}" class="form-label">
+              {{ form.requester_name.label }}
+            </label>
+            <input type="text" name="{{ form.requester_name.html_name }}"
+                   id="{{ form.requester_name.id_for_label }}"
+                   class="form-control form-control-lg {% if form.requester_name.errors %}is-invalid{% endif %}"
+                   value="{{ form.requester_name.value|default:'' }}"
+                   autocomplete="name" required>
+            {% if form.requester_name.errors %}
+              <div class="invalid-feedback d-block">{{ form.requester_name.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ form.requester_phone.id_for_label }}" class="form-label">
+              {{ form.requester_phone.label }}
+            </label>
+            <input type="tel" name="{{ form.requester_phone.html_name }}"
+                   id="{{ form.requester_phone.id_for_label }}"
+                   class="form-control form-control-lg {% if form.requester_phone.errors %}is-invalid{% endif %}"
+                   value="{{ form.requester_phone.value|default:'' }}"
+                   placeholder="07XXXXXXXX" inputmode="tel" autocomplete="tel" required>
+            <div class="form-text">You'll receive SMS updates on this number.</div>
+            {% if form.requester_phone.errors %}
+              <div class="invalid-feedback d-block">{{ form.requester_phone.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          {# ---- Section 2: Location ---- #}
+          <h6 class="text-uppercase text-muted small fw-semibold mb-3 mt-4">
+            2 · Where are you?
+          </h6>
+
+          <div class="mb-3">
+            <label for="{{ form.office.id_for_label }}" class="form-label">
+              {{ form.office.label }}
+            </label>
+            <input type="text" name="{{ form.office.html_name }}"
+                   id="{{ form.office.id_for_label }}"
+                   class="form-control form-control-lg {% if form.office.errors %}is-invalid{% endif %}"
+                   value="{{ form.office.value|default:'' }}" required>
+            {% if form.office.errors %}
+              <div class="invalid-feedback d-block">{{ form.office.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <button type="button" id="loc-btn"
+                  class="btn btn-outline-secondary w-100 mb-2">
+            📍 Capture my exact location
+          </button>
+          <div id="loc-status" class="small text-muted mb-4">
+            Location not captured yet.
+          </div>
+
+          {# ---- Section 3: Problem ---- #}
+          <h6 class="text-uppercase text-muted small fw-semibold mb-3 mt-4">
+            3 · What is the problem?
+          </h6>
+
+          <div class="mb-3">
+            <label for="{{ form.title.id_for_label }}" class="form-label">
+              {{ form.title.label }}
+            </label>
+            <input type="text" name="{{ form.title.html_name }}"
+                   id="{{ form.title.id_for_label }}"
+                   class="form-control form-control-lg {% if form.title.errors %}is-invalid{% endif %}"
+                   value="{{ form.title.value|default:'' }}"
+                   placeholder="Short summary" required>
+            {% if form.title.errors %}
+              <div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ form.description.id_for_label }}" class="form-label">
+              {{ form.description.label }}
+            </label>
+            <textarea name="{{ form.description.html_name }}"
+                      id="{{ form.description.id_for_label }}"
+                      class="form-control {% if form.description.errors %}is-invalid{% endif %}"
+                      rows="5" placeholder="Describe what happened, what you were doing, etc."
+                      required>{{ form.description.value|default:'' }}</textarea>
+            {% if form.description.errors %}
+              <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">Attach files</label>
+            <input type="file" name="attachments" multiple
+                   class="form-control form-control-lg"
+                   accept="image/*,.pdf,.doc,.docx,.txt,.log">
+            <div class="form-text">Up to 5 files · 10 MB each</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 btn-lg">
+            Submit ticket
+          </button>
+        </form>
+
+      </div>
     </div>
-
-    <h6 class="text-muted">2. Where are you?</h6>
-    <div class="mb-2">{{ form.office.label_tag }}{{ form.office }}{{ form.office.errors }}</div>
-    <button type="button" id="loc-btn" class="btn btn-outline-secondary btn-sm mb-1">📍 Capture my exact location</button>
-    <div id="loc-status" class="small text-muted mb-3">Location not captured yet.</div>
-
-    <h6 class="text-muted">3. What is the problem?</h6>
-    <div class="mb-2">{{ form.title.label_tag }}{{ form.title }}{{ form.title.errors }}</div>
-    <div class="mb-2">{{ form.description.label_tag }}{{ form.description }}{{ form.description.errors }}</div>
-    <div class="mb-3">
-      <label class="form-label">Attach files (up to 5 files, 10 MB each)</label>
-      <input type="file" name="attachments" multiple class="form-control">
-    </div>
-    <button class="btn btn-primary">Submit ticket</button>
-  </form>
-</div></div>
+  </div>
+</div>
 
 <script>
 document.getElementById("loc-btn").addEventListener("click", function () {
   const status = document.getElementById("loc-status");
-  if (!navigator.geolocation) { status.textContent = "Geolocation is not supported by this browser."; return; }
+  if (!navigator.geolocation) {
+    status.textContent = "Geolocation is not supported by this browser.";
+    return;
+  }
   status.textContent = "Getting location...";
   navigator.geolocation.getCurrentPosition(function (pos) {
     document.getElementById("id_latitude").value = pos.coords.latitude.toFixed(6);
     document.getElementById("id_longitude").value = pos.coords.longitude.toFixed(6);
-    status.textContent = "Captured: " + pos.coords.latitude.toFixed(6) + ", " +
-      pos.coords.longitude.toFixed(6) + " (accuracy ±" + Math.round(pos.coords.accuracy) + " m)";
+    status.textContent = "✔ Captured: " + pos.coords.latitude.toFixed(6) + ", " +
+      pos.coords.longitude.toFixed(6) + "  (±" + Math.round(pos.coords.accuracy) + " m)";
   }, function (err) {
     status.textContent = "Could not get location: " + err.message;
   }, { enableHighAccuracy: true, timeout: 15000 });

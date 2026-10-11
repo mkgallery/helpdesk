@@ -1,13 +1,42 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card mx-auto text-center" style="max-width:560px"><div class="card-body py-5">
-  <h3 class="text-success">Ticket submitted ✔</h3>
-  <p class="fs-5">Your ticket number is <strong>#{{ ticket.number }}</strong></p>
-  <p class="text-muted">
-    Please write it down. To check progress later, press <strong>View ticket</strong> and enter
-    this number with your phone number ({{ ticket.requester_phone }}).
-  </p>
-  <a class="btn btn-primary" href="{% url 'ticket_track' %}">View ticket</a>
-  <a class="btn btn-outline-secondary" href="{% url 'ticket_create' %}">Submit another ticket</a>
-</div></div>
+<div class="row justify-content-center">
+  <div class="col-12 col-md-9 col-lg-7 col-xl-6">
+    <div class="card border-0 shadow-sm text-center">
+      <div class="card-body p-4 p-sm-5">
+
+        <div class="mb-3">
+          <div class="mx-auto d-flex align-items-center justify-content-center rounded-circle"
+               style="width:64px;height:64px;background:#ecfdf5;color:#16a34a;font-size:1.75rem;">
+            ✓
+          </div>
+        </div>
+
+        <h4 class="mb-2">Ticket submitted</h4>
+        <p class="text-muted mb-4">We've received your report and IT staff will be notified.</p>
+
+        <div class="bg-light rounded p-4 mb-4">
+          <div class="text-muted small mb-1">Your ticket number</div>
+          <div class="fs-2 fw-bold">#{{ ticket.number }}</div>
+        </div>
+
+        <p class="text-muted small mb-4">
+          Write this number down. You'll receive SMS updates at
+          <strong>{{ ticket.requester_phone }}</strong> when someone responds.<br>
+          To check progress anytime, use <strong>Check ticket</strong> with this number.
+        </p>
+
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+          <a class="btn btn-primary btn-lg" href="{% url 'ticket_track' %}">
+            Check ticket
+          </a>
+          <a class="btn btn-outline-secondary btn-lg" href="{% url 'ticket_create' %}">
+            Submit another
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

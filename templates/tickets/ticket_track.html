@@ -1,44 +1,120 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card mx-auto mb-3" style="max-width:560px"><div class="card-body">
-  <h4 class="mb-3">View your ticket</h4>
-  <form method="post">{% csrf_token %}
-    {{ form.non_field_errors }}
-    <div class="mb-2">{{ form.number.label_tag }}{{ form.number }}{{ form.number.errors }}</div>
-    <div class="mb-3">{{ form.phone.label_tag }}{{ form.phone }}{{ form.phone.errors }}</div>
-    <button class="btn btn-primary w-100">Check status</button>
-  </form>
-</div></div>
+<style>
+  .timeline-dot {
+    width: 32px;
+    height: 32px;
+    font-size: .8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .timeline-done    { background:#16a34a; color:#fff; }
+  .timeline-current { background:#4F46E5; color:#fff; }
+  .timeline-todo    { background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; }
+</style>
 
-{% if searched and not ticket %}
-<div class="alert alert-warning mx-auto" style="max-width:560px">
-  No open ticket matches that number and phone number. Please check both. If your
-  ticket was already closed, its number has been released and it can no longer be viewed here.
-</div>
-{% endif %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-9 col-lg-7 col-xl-6">
 
-{% if ticket %}
-<div class="card mx-auto" style="max-width:560px"><div class="card-body">
-  <h5>Ticket #{{ ticket.number }} — {{ ticket.title }}</h5>
-  <p class="text-muted">
-    Submitted {{ ticket.created_at|date:"d M Y H:i" }} ·
-    Last update {{ ticket.updated_at|date:"d M Y H:i" }}
-  </p>
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body p-4 p-sm-5">
+        <div class="text-center mb-4">
+          <h4 class="mb-1">Check your ticket</h4>
+          <p class="text-muted small mb-0">Enter your ticket number and phone number.</p>
+        </div>
 
-  <div class="d-flex justify-content-between text-center my-3">
-    {% for s in stages %}
-      <div class="flex-fill">
-        <span class="badge rounded-pill {% if s.state == 'done' %}text-bg-success{% elif s.state == 'current' %}text-bg-primary{% else %}text-bg-light border{% endif %}">{{ forloop.counter }}</span>
-        <div class="small {% if s.state == 'current' %}fw-bold{% endif %}">{{ s.label }}</div>
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger py-2 small">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="{{ form.number.id_for_label }}" class="form-label">{{ form.number.label }}</label>
+            <input type="number" name="{{ form.number.html_name }}"
+                   id="{{ form.number.id_for_label }}"
+                   class="form-control form-control-lg {% if form.number.errors %}is-invalid{% endif %}"
+                   value="{{ form.number.value|default:'' }}" min="1" inputmode="numeric" required>
+            {% if form.number.errors %}
+              <div class="invalid-feedback d-block">{{ form.number.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-4">
+            <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
+            <input type="tel" name="{{ form.phone.html_name }}"
+                   id="{{ form.phone.id_for_label }}"
+                   class="form-control form-control-lg {% if form.phone.errors %}is-invalid{% endif %}"
+                   value="{{ form.phone.value|default:'' }}"
+                   placeholder="07XXXXXXXX" inputmode="tel" required>
+            {% if form.phone.errors %}
+              <div class="invalid-feedback d-block">{{ form.phone.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <button class="btn btn-primary w-100 btn-lg">Check status</button>
+        </form>
       </div>
-    {% endfor %}
-  </div>
+    </div>
 
-  <p class="mb-1"><strong>Current status:</strong> {{ ticket.get_status_display }}</p>
-  <p class="mb-1"><strong>Handled by:</strong>
-    {% if ticket.assigned_to %}{{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}{% else %}Waiting for an IT staff member{% endif %}
-  </p>
-  <p class="small text-muted mb-0 mt-2">When your ticket is closed it leaves the system and its number is released.</p>
-</div></div>
-{% endif %}
+    {% if searched and not ticket %}
+      <div class="alert alert-warning shadow-sm">
+        <strong>No open ticket matches.</strong><br>
+        Please check the number and phone. If your ticket was already closed, its number has been released.
+      </div>
+    {% endif %}
+
+    {% if ticket %}
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4 p-sm-5">
+
+          <h5 class="mb-1">Ticket #{{ ticket.number }}</h5>
+          <p class="text-muted small mb-3">{{ ticket.title }}</p>
+
+          <p class="text-muted small mb-3">
+            Submitted {{ ticket.created_at|date:"d M Y, H:i" }}<br>
+            Last update {{ ticket.updated_at|date:"d M Y, H:i" }}
+          </p>
+
+          {# Timeline #}
+          <div class="d-flex justify-content-between text-center mb-4">
+            {% for s in stages %}
+              <div class="flex-fill px-1">
+                <div class="timeline-dot mx-auto mb-2 {% if s.state == 'done' %}timeline-done{% elif s.state == 'current' %}timeline-current{% else %}timeline-todo{% endif %}">
+                  {% if s.state == 'done' %}✓{% else %}{{ forloop.counter }}{% endif %}
+                </div>
+                <div class="small {% if s.state == 'current' %}fw-semibold{% else %}text-muted{% endif %}">
+                  {{ s.label }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          <hr>
+
+          <p class="mb-1">
+            <span class="text-muted small">Current status:</span>
+            <span class="badge text-bg-primary ms-1">{{ ticket.get_status_display }}</span>
+          </p>
+          <p class="mb-0">
+            <span class="text-muted small">Handled by:</span>
+            {% if ticket.assigned_to %}
+              {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+            {% else %}
+              <em>Waiting for an IT staff member</em>
+            {% endif %}
+          </p>
+
+          <p class="small text-muted mb-0 mt-3">
+            When your ticket is closed it leaves the system and its number is released.
+          </p>
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
 {% endblock %}
