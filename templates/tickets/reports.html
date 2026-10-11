@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
+
 <h4 class="mb-3">Reports — Tickets</h4>
 
 {# ---------------- Filter bar (date range only) ---------------- #}
-<form method="get" class="card mb-3">
-  <div class="card-body">
-    <div class="row g-2 align-items-end">
-      <div class="col-md-3">
+<form method="get" class="card border-0 shadow-sm mb-3">
+  <div class="card-body p-3 p-sm-4">
+    <div class="row g-3 align-items-end">
+      <div class="col-12 col-sm-6 col-md-3">
         <label class="form-label">Date range</label>
         <select name="range" class="form-select">
           <option value="all"        {% if params.range == 'all'        %}selected{% endif %}>All time</option>
@@ -17,65 +18,142 @@
           <option value="custom"     {% if params.range == 'custom'     %}selected{% endif %}>Custom range</option>
         </select>
       </div>
-      <div class="col-md-3">
+      <div class="col-6 col-sm-3 col-md-2">
         <label class="form-label">From</label>
         <input type="date" name="from" value="{{ params.from|default:'' }}" class="form-control">
       </div>
-      <div class="col-md-3">
+      <div class="col-6 col-sm-3 col-md-2">
         <label class="form-label">To</label>
         <input type="date" name="to" value="{{ params.to|default:'' }}" class="form-control">
       </div>
-      <div class="col-md-3 d-flex gap-2">
-        <button class="btn btn-primary w-100">Apply</button>
-        <a href="{% url 'reports' %}" class="btn btn-outline-secondary">Reset</a>
+      <div class="col-12 col-md-5 d-flex gap-2">
+        <button class="btn btn-primary flex-fill">Apply</button>
+        <a href="{% url 'reports' %}" class="btn btn-outline-secondary flex-fill">Reset</a>
       </div>
     </div>
   </div>
 </form>
 
 {# ---------------- Summary + export ---------------- #}
-<div class="d-flex justify-content-between align-items-center mb-2">
-  <div><strong>{{ ticket_count }}</strong> ticket{{ ticket_count|pluralize }} in this range.</div>
-  <a href="{% url 'reports_csv' %}?{{ params.urlencode }}" class="btn btn-success">
-    Download CSV
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div class="text-muted">
+    <strong class="text-dark">{{ ticket_count }}</strong>
+    ticket{{ ticket_count|pluralize }} in this range.
+  </div>
+  <a href="{% url 'reports_csv' %}?{{ params.urlencode }}"
+     class="btn btn-success">
+    ⬇ Download CSV
   </a>
 </div>
 
-{# ---------------- Results table ---------------- #}
-<div class="table-responsive">
-  <table class="table table-sm table-striped align-middle">
-    <thead class="table-light">
-      <tr>
-        <th>#</th>
-        <th>Title</th>
-        <th>Status</th>
-        <th>Priority</th>
-        <th>Office</th>
-        <th>Requester</th>
-        <th>Phone</th>
-        <th>Assigned to</th>
-        <th>Created</th>
-        <th>Updated</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for t in tickets %}
-        <tr>
-          <td>#{{ t.number|default:t.closed_number|default:t.pk }}</td>
-          <td><a href="{% url 'ticket_detail' t.pk %}">{{ t.title }}</a></td>
-          <td>{{ t.get_status_display }}</td>
-          <td>{{ t.get_priority_display }}</td>
-          <td>{{ t.office }}</td>
-          <td>{{ t.requester_name }}</td>
-          <td>{{ t.requester_phone }}</td>
-          <td>{{ t.assigned_to.username|default:"—" }}</td>
-          <td>{{ t.created_at|date:"d M Y H:i" }}</td>
-          <td>{{ t.updated_at|date:"d M Y H:i" }}</td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="10" class="text-center text-muted py-4">No tickets in this range.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{# ============== DESKTOP TABLE ============== #}
+<div class="d-none d-lg-block">
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Office</th>
+            <th>Requester</th>
+            <th>Phone</th>
+            <th>Assigned to</th>
+            <th>Created</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in tickets %}
+            <tr>
+              <td class="text-muted">#{{ t.number|default:t.closed_number|default:t.pk }}</td>
+              <td><a href="{% url 'ticket_detail' t.pk %}" class="fw-medium">{{ t.title }}</a></td>
+              <td>
+                <span class="badge
+                  {% if t.status == 'open' %}text-bg-primary
+                  {% elif t.status == 'in_progress' %}text-bg-warning
+                  {% elif t.status == 'resolved' %}text-bg-success
+                  {% else %}text-bg-secondary{% endif %}">
+                  {{ t.get_status_display }}
+                </span>
+              </td>
+              <td>
+                {% if t.priority == 'high' %}
+                  <span class="badge" style="background:#fee2e2;color:#b91c1c;">{{ t.get_priority_display }}</span>
+                {% elif t.priority == 'medium' %}
+                  <span class="badge" style="background:#fef3c7;color:#a16207;">{{ t.get_priority_display }}</span>
+                {% else %}
+                  <span class="badge" style="background:#f1f5f9;color:#475569;">{{ t.get_priority_display }}</span>
+                {% endif %}
+              </td>
+              <td class="text-muted">{{ t.office }}</td>
+              <td>{{ t.requester_name }}</td>
+              <td class="text-muted">{{ t.requester_phone }}</td>
+              <td class="text-muted">{{ t.assigned_to.username|default:"—" }}</td>
+              <td class="text-muted small">{{ t.created_at|date:"d M Y" }}<br>{{ t.created_at|date:"H:i" }}</td>
+              <td class="text-muted small">{{ t.updated_at|date:"d M Y" }}<br>{{ t.updated_at|date:"H:i" }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="10" class="text-center text-muted py-4">No tickets in this range.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
+
+{# ============== MOBILE CARDS ============== #}
+<div class="d-lg-none">
+  {% for t in tickets %}
+    <a href="{% url 'ticket_detail' t.pk %}" class="text-decoration-none text-reset">
+      <div class="card border-0 shadow-sm mb-2">
+        <div class="card-body p-3">
+
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted small">
+              #{{ t.number|default:t.closed_number|default:t.pk }}
+            </span>
+            <span class="badge
+              {% if t.status == 'open' %}text-bg-primary
+              {% elif t.status == 'in_progress' %}text-bg-warning
+              {% elif t.status == 'resolved' %}text-bg-success
+              {% else %}text-bg-secondary{% endif %}">
+              {{ t.get_status_display }}
+            </span>
+          </div>
+
+          <div class="fw-semibold mb-1">{{ t.title }}</div>
+
+          <div class="text-muted small mb-2">
+            {{ t.office }} · {{ t.created_at|date:"d M Y, H:i" }}
+          </div>
+
+          <div class="d-flex flex-wrap gap-1 small">
+            {% if t.priority == 'high' %}
+              <span class="badge text-bg-danger">{{ t.get_priority_display }}</span>
+            {% elif t.priority == 'medium' %}
+              <span class="badge text-bg-warning">{{ t.get_priority_display }}</span>
+            {% else %}
+              <span class="badge text-bg-light border">{{ t.get_priority_display }}</span>
+            {% endif %}
+            <span class="badge text-bg-light border">{{ t.requester_name }}</span>
+            <span class="badge text-bg-light border">
+              {% if t.assigned_to %}{{ t.assigned_to.username }}{% else %}Unassigned{% endif %}
+            </span>
+          </div>
+
+        </div>
+      </div>
+    </a>
+  {% empty %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center text-muted py-5">
+        No tickets in this range.
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
 {% endblock %}
