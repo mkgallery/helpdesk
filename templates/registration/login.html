@@ -1,10 +1,55 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card mx-auto" style="max-width:420px"><div class="card-body">
-  <h4 class="mb-3">IT staff login</h4>
-  <form method="post">{% csrf_token %}
-    {{ form.as_p }}
-    <button class="btn btn-primary w-100">Login</button>
-  </form>
-</div></div>
+<div class="row justify-content-center">
+  <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4 p-sm-5">
+        <div class="text-center mb-4">
+          <h4 class="mb-1">Welcome back</h4>
+          <p class="text-muted small mb-0">Sign in to your IT Helpdesk account</p>
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger py-2 small">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          {% for field in form %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label">
+                {{ field.label }}
+              </label>
+              <input
+                type="{{ field.field.widget.input_type|default:'text' }}"
+                name="{{ field.html_name }}"
+                id="{{ field.id_for_label }}"
+                class="form-control form-control-lg {% if field.errors %}is-invalid{% endif %}"
+                {% if field.value %}value="{{ field.value }}"{% endif %}
+                autocomplete="{{ field.field.widget.attrs.autocomplete|default:'off' }}"
+                required
+              >
+              {% if field.errors %}
+                <div class="invalid-feedback d-block">
+                  {{ field.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+
+          <button type="submit" class="btn btn-primary w-100 btn-lg mt-2">
+            Sign in
+          </button>
+        </form>
+
+        <p class="text-center text-muted small mt-4 mb-0">
+          Forgot your password? Contact your supervisor.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
