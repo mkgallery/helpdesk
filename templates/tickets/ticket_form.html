@@ -83,7 +83,7 @@
                    id="{{ form.title.id_for_label }}"
                    class="form-control form-control-lg {% if form.title.errors %}is-invalid{% endif %}"
                    value="{{ form.title.value|default:'' }}"
-                   placeholder="Short summary" required>
+                   placeholder="Hardware (Printer, Scanner), Software/System Error, Network Issues" required>
             {% if form.title.errors %}
               <div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>
             {% endif %}
