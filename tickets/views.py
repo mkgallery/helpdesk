@@ -7,7 +7,6 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 import csv
-
 from django.http import HttpResponse
 
 from .forms import CommentForm, TicketForm, TrackForm, phone_key
@@ -18,7 +17,6 @@ from .sms import (
     notify_ticket_comment,
     notify_ticket_status,
 )
-
 
 MAX_FILES = 5
 MAX_FILE_MB = 10
@@ -160,6 +158,12 @@ def ticket_detail(request, pk):
     can_work = user.is_supervisor or ticket.assigned_to_id in (None, user.id)
 
     if request.method == "POST":
+        # --- CLOSED TICKET: reject every action ---
+        if ticket.is_closed:
+            messages.error(request, "This ticket is closed. No further changes can be made.")
+            return redirect("ticket_detail", pk=ticket.pk)
+        # ------------------------------------------
+
         action = request.POST.get("action")
         if action == "comment":
             form = CommentForm(request.POST)
@@ -167,7 +171,6 @@ def ticket_detail(request, pk):
                 c = form.save(commit=False)
                 c.ticket, c.author = ticket, user
                 c.save()
-                # --- SMS: notify requester of the new reply ---
                 notify_ticket_comment(ticket, c)
 
         elif action == "take" and can_work:
@@ -175,7 +178,6 @@ def ticket_detail(request, pk):
             if ticket.status == Ticket.Status.OPEN:
                 ticket.status = Ticket.Status.IN_PROGRESS
             ticket.save()
-            # --- SMS: notify requester their ticket is being handled ---
             notify_ticket_assigned(ticket, user)
             messages.success(request, "You are now handling this ticket.")
 
@@ -184,7 +186,6 @@ def ticket_detail(request, pk):
             if new_status in dict(Ticket.Status.choices):
                 ticket.status = new_status
                 ticket.save()
-                # --- SMS: notify requester of the status change ---
                 notify_ticket_status(ticket)
                 if new_status == Ticket.Status.CLOSED:
                     messages.success(request, "Ticket closed. Its number is free for a new ticket.")
@@ -200,13 +201,9 @@ def ticket_detail(request, pk):
                 if ticket.status == Ticket.Status.OPEN:
                     ticket.status = Ticket.Status.IN_PROGRESS
                 ticket.save()
-                # --- SMS: notify requester who is handling the ticket ---
                 notify_ticket_assigned(ticket, staff_user)
                 messages.success(request, f"Assigned to {staff_user.username}.")
 
-        # ---------------- NEW: internal handoff between IT staff ----------------
-        # Only the currently assigned staff member can hand off.
-        # No SMS to the employee — this is an internal change of hands.
         elif action == "handoff" and ticket.assigned_to_id == user.id:
             new_staff = User.objects.filter(
                 pk=request.POST.get("new_staff"),
@@ -218,7 +215,6 @@ def ticket_detail(request, pk):
                 messages.success(request, f"Ticket handed off to {new_staff.username}.")
             else:
                 messages.error(request, "Please choose a valid staff member.")
-        # ------------------------------------------------------------------------
 
         else:
             raise PermissionDenied
@@ -235,6 +231,8 @@ def ticket_detail(request, pk):
         "staff_members": User.objects.filter(role=User.Role.STAFF) if user.is_supervisor else None,
         "other_staff": other_staff,
     })
+
+
 # ---------- Reports (supervisor only) ----------
 @role_required(User.Role.SUPERVISOR)
 def reports(request):
@@ -242,11 +240,7 @@ def reports(request):
     return render(request, "tickets/reports.html", {
         "tickets": tickets,
         "ticket_count": tickets.count(),
-        "offices": all_offices(),
-        "staff_list": all_staff(),
-        "statuses": Ticket.Status.choices,
-        "priorities": Ticket.Priority.choices,
-        "params": request.GET,     # so the template can re-fill the form
+        "params": request.GET,
     })
 
 
