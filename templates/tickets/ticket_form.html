@@ -75,13 +75,13 @@
             3 · What is the problem?
           </h6>
 
-          <div class="mb-3">
+                    <div class="mb-3">
             <label for="{{ form.title.id_for_label }}" class="form-label">
               {{ form.title.label }}
             </label>
             <input type="text" name="{{ form.title.html_name }}"
                    id="{{ form.title.id_for_label }}"
-                   class="form-control form-control-lg {% if form.title.errors %}is-invalid{% endif %}"
+                   class="form-control {% if form.title.errors %}is-invalid{% endif %}"
                    value="{{ form.title.value|default:'' }}"
                    placeholder="e.g. Hardware, Software/System, Network, Printer, Email"
                    required>
