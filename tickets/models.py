@@ -88,6 +88,10 @@ class Ticket(models.Model):
         if self.number is not None:
             return f"#{self.number}"
         return f"closed (was #{self.closed_number or self.pk})"
+    
+    @property
+    def is_closed(self):
+        return self.status == self.Status.CLOSED
 
     @classmethod
     def _next_free_number(cls):
